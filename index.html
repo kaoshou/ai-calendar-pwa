@@ -22,7 +22,7 @@
     <a id="openApp" href="#">開啟 AI 行事曆助理</a>
   </main>
 <script>
-const GAS_WEB_APP_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec'; //YOUR_APPS_SCRIPT_WEB_APP_URL_HERE
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 document.getElementById('openApp').addEventListener('click', (e) => {
   e.preventDefault();
