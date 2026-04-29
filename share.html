@@ -2,31 +2,28 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>接收分享文字</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#38bdf8">
+  <meta name="mobile-web-app-capable" content="yes">
   <style>
-    body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,'Noto Sans TC',sans-serif; color:#e5f0ff; background:#050816; }
-    .box { width:min(560px, calc(100% - 32px)); padding:24px; border-radius:24px; background:rgba(15,23,42,.8); border:1px solid rgba(255,255,255,.16); }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,'Noto Sans TC',sans-serif; color:#e5f0ff; background:#050816; padding:18px; }
+    .box { width:min(560px,100%); padding:24px; border-radius:24px; background:rgba(15,23,42,.8); border:1px solid rgba(255,255,255,.16); line-height:1.8; }
   </style>
 </head>
 <body>
   <div class="box">正在將分享文字送到 AI 行事曆助理...</div>
 <script>
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec'; //YOUR_APPS_SCRIPT_WEB_APP_URL_HERE
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec';
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.warn);
 const params = new URLSearchParams(location.search);
-if (GAS_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
-  document.querySelector('.box').innerHTML = '請先在 share.html 設定 GAS_WEB_APP_URL。';
-} else {
-  const target = new URL(GAS_WEB_APP_URL);
-  ['title','text','url'].forEach(k => {
-    const v = params.get(k);
-    if (v) target.searchParams.set(k === 'text' ? 'sharedText' : k, v);
-  });
-  location.replace(target.toString());
-}
+const target = new URL(GAS_WEB_APP_URL);
+['title','text','url'].forEach(k => {
+  const v = params.get(k);
+  if (v) target.searchParams.set(k === 'text' ? 'sharedText' : k, v);
+});
+location.replace(target.toString());
 </script>
 </body>
 </html>

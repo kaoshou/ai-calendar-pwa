@@ -2,32 +2,97 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AI 行事曆助理</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#38bdf8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="AI行事曆">
+  <link rel="apple-touch-icon" href="./icon-192.png">
   <style>
-    body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,'Noto Sans TC',sans-serif; color:#e5f0ff; background:radial-gradient(circle at 20% 10%,rgba(56,189,248,.28),transparent 24rem),linear-gradient(135deg,#020617,#0f172a); }
-    main { width:min(560px, calc(100% - 32px)); padding:28px; border:1px solid rgba(255,255,255,.16); border-radius:28px; background:rgba(15,23,42,.72); box-shadow:0 24px 70px rgba(0,0,0,.35); }
-    h1 { margin:0 0 12px; font-size:2rem; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,'Noto Sans TC',sans-serif; color:#e5f0ff; background:radial-gradient(circle at 20% 10%,rgba(56,189,248,.28),transparent 24rem),radial-gradient(circle at 85% 30%,rgba(129,140,248,.25),transparent 22rem),linear-gradient(135deg,#020617,#0f172a); padding:18px; }
+    main { width:min(580px,100%); padding:28px; border:1px solid rgba(255,255,255,.16); border-radius:28px; background:rgba(15,23,42,.76); box-shadow:0 24px 70px rgba(0,0,0,.35); backdrop-filter:blur(18px); }
+    h1 { margin:0 0 12px; font-size:2rem; letter-spacing:-.04em; }
     p { color:#9fb0ca; line-height:1.8; }
-    a { display:inline-flex; margin-top:14px; padding:13px 18px; border-radius:14px; background:linear-gradient(135deg,#38bdf8,#818cf8); color:#03111f; font-weight:900; text-decoration:none; }
+    .actions { display:grid; gap:12px; margin-top:18px; }
+    button,a { width:100%; border:0; display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding:13px 18px; border-radius:16px; background:linear-gradient(135deg,#38bdf8,#818cf8); color:#03111f; font-weight:900; text-decoration:none; font-size:1rem; cursor:pointer; }
+    a.secondary, button.secondary { background:rgba(255,255,255,.08); color:#e5f0ff; border:1px solid rgba(255,255,255,.14); }
     code { background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px; }
+    .hint { font-size:.92rem; color:#94a3b8; }
   </style>
 </head>
 <body>
   <main>
     <h1>AI 行事曆助理</h1>
-    <p>這是 PWA 外殼頁。請先把 <code>index.html</code> 裡的 <code>GAS_WEB_APP_URL</code> 改成你的 Apps Script Web App URL。</p>
-    <a id="openApp" href="#">開啟 AI 行事曆助理</a>
+    <p>這是可安裝的 PWA 外殼。安裝後，可從 Android 分享選單接收文字，再送到 Google Apps Script 的 AI 行事曆助手。</p>
+    <div class="actions">
+      <button id="installBtn" style="display:none">安裝到手機</button>
+      <a id="openApp" href="#">開啟 AI 行事曆助理</a>
+      <button class="secondary" id="testBtn">檢查 PWA 狀態</button>
+    </div>
+    <p class="hint" id="status">載入中...</p>
   </main>
 <script>
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec'; //YOUR_APPS_SCRIPT_WEB_APP_URL_HERE
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec';
+let deferredPrompt = null;
+const statusEl = document.getElementById('status');
+const installBtn = document.getElementById('installBtn');
+
+function setStatus(msg) { statusEl.textContent = msg; }
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      await navigator.serviceWorker.ready;
+      setStatus('PWA 外殼已就緒。若沒有看到安裝按鈕，請重新整理一次，或用 Chrome 選單「安裝應用程式」。');
+    } catch (err) {
+      setStatus('Service Worker 註冊失敗：' + err.message);
+    }
+  });
+} else {
+  setStatus('此瀏覽器不支援 Service Worker，無法作為完整 PWA。');
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'inline-flex';
+  setStatus('可以安裝了。請按「安裝到手機」。');
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const choice = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+  setStatus(choice.outcome === 'accepted' ? '已送出安裝流程。' : '已取消安裝。也可以從 Chrome 選單安裝。');
+});
+
+window.addEventListener('appinstalled', () => setStatus('已安裝完成。'));
+
 document.getElementById('openApp').addEventListener('click', (e) => {
   e.preventDefault();
-  if (GAS_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) alert('請先設定 GAS_WEB_APP_URL');
-  else location.href = GAS_WEB_APP_URL;
+  location.href = GAS_WEB_APP_URL;
+});
+
+document.getElementById('testBtn').addEventListener('click', async () => {
+  const checks = [];
+  checks.push(location.protocol === 'https:' ? 'HTTPS：OK' : 'HTTPS：失敗');
+  checks.push('ServiceWorker：' + ('serviceWorker' in navigator ? 'OK' : '不支援'));
+  try {
+    const m = await fetch('./manifest.webmanifest', { cache: 'no-store' });
+    checks.push('Manifest：' + (m.ok ? 'OK' : '讀取失敗'));
+  } catch(e) { checks.push('Manifest：讀取失敗'); }
+  try {
+    const i192 = await fetch('./icon-192.png', { cache: 'no-store' });
+    const i512 = await fetch('./icon-512.png', { cache: 'no-store' });
+    checks.push('Icons：' + (i192.ok && i512.ok ? 'OK' : '缺少 icon-192.png 或 icon-512.png'));
+  } catch(e) { checks.push('Icons：讀取失敗'); }
+  setStatus(checks.join('｜'));
 });
 </script>
 </body>
