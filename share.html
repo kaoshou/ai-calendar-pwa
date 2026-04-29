@@ -14,7 +14,7 @@
 <body>
   <div class="box">正在將分享文字送到 AI 行事曆助理...</div>
 <script>
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7vtIPaK4zSgtX5H1Cpk51fbYniv7ObEdFWwBN-biZVx8qX35Ir7vzwQy1xmIqjddD/exec'; //YOUR_APPS_SCRIPT_WEB_APP_URL_HERE
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 const params = new URLSearchParams(location.search);
 if (GAS_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
